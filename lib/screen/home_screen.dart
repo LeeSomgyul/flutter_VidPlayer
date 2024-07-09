@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,22 +13,28 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool showVideoPlayer = false;
+  XFile? video;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: showVideoPlayer
-          ? const _VideoPlayer()
+      backgroundColor: Colors.black,
+      body: video != null
+          ? _VideoPlayer(
+              video: video!,
+            )
           : _VideoSelector(
               onLogoTap: onLogoTap,
             ),
     );
   }
 
-  onLogoTap() {
+  onLogoTap() async {
+    final video = await ImagePicker().pickVideo(
+      source: ImageSource.gallery,
+    );
     setState(() {
-      showVideoPlayer = true;
+      this.video = video;
     });
   }
 }
@@ -114,13 +124,44 @@ class _Title extends StatelessWidget {
   }
 }
 
-class _VideoPlayer extends StatelessWidget {
-  const _VideoPlayer({super.key});
+class _VideoPlayer extends StatefulWidget {
+  final XFile video;
+
+  const _VideoPlayer({
+    required this.video,
+    super.key,
+  });
+
+  @override
+  State<_VideoPlayer> createState() => _VideoPlayerState();
+}
+
+class _VideoPlayerState extends State<_VideoPlayer> {
+  late final VideoPlayerController videoPlayerController;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeController();
+  }
+
+  initializeController() async {
+    videoPlayerController = VideoPlayerController.file(
+      File(
+        widget.video.path,
+      ),
+    );
+
+    await videoPlayerController.initialize();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('show video'),
+    return Center(
+      child: AspectRatio(
+          aspectRatio: videoPlayerController.value.aspectRatio,
+          child: VideoPlayer(videoPlayerController)),
     );
   }
 }
