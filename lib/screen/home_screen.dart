@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
@@ -153,6 +154,11 @@ class _VideoPlayerState extends State<_VideoPlayer> {
     );
 
     await videoPlayerController.initialize();
+
+    videoPlayerController.addListener(() {
+      setState(() {});
+    });
+
     setState(() {});
   }
 
@@ -161,7 +167,88 @@ class _VideoPlayerState extends State<_VideoPlayer> {
     return Center(
       child: AspectRatio(
           aspectRatio: videoPlayerController.value.aspectRatio,
-          child: VideoPlayer(videoPlayerController)),
+          child: Stack(
+            children: [
+              VideoPlayer(videoPlayerController),
+              Align(
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                        color: Colors.white,
+                        onPressed: () {
+                          final currentPosition =
+                              videoPlayerController.value.position;
+                          Duration position = const Duration();
+
+                          if (currentPosition.inSeconds > 3) {
+                            position =
+                                currentPosition - const Duration(seconds: 3);
+                          }
+
+                          videoPlayerController.seekTo(position);
+                        },
+                        icon: const Icon(Icons.rotate_left)),
+                    IconButton(
+                      color: Colors.white,
+                      onPressed: () {
+                        setState(() {
+                          if (videoPlayerController.value.isPlaying) {
+                            videoPlayerController.pause();
+                          } else {
+                            videoPlayerController.play();
+                          }
+                        });
+                      },
+                      icon: Icon(videoPlayerController.value.isPlaying
+                          ? Icons.pause
+                          : Icons.play_arrow),
+                    ),
+                    IconButton(
+                        color: Colors.white,
+                        onPressed: () {
+                          final maxPosition =
+                              videoPlayerController.value.duration;
+                          final currentPosition =
+                              videoPlayerController.value.position;
+                          Duration position = maxPosition;
+
+                          if ((maxPosition - const Duration(seconds: 3))
+                                  .inSeconds >
+                              currentPosition.inSeconds) {
+                            position =
+                                currentPosition + const Duration(seconds: 3);
+                          }
+
+                          videoPlayerController.seekTo(position);
+                        },
+                        icon: const Icon(Icons.rotate_right)),
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Slider(
+                  max:
+                      videoPlayerController.value.duration.inSeconds.toDouble(),
+                  value:
+                      videoPlayerController.value.position.inSeconds.toDouble(),
+                  onChanged: (double val) {},
+                ),
+              ),
+              Positioned(
+                right: 0,
+                child: IconButton(
+                  color: Colors.white,
+                  onPressed: () {},
+                  icon: const Icon(Icons.photo_camera_back),
+                ),
+              ),
+            ],
+          )),
     );
   }
 }
